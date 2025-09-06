@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,51 +11,67 @@ import type { ExplainSafeTermsInput } from "@/ai/flows/explain-safe-terms";
 
 const PRE_ROUND_SHARES = 10_000_000;
 
+function calculateEquity(
+  investmentAmount: number,
+  valuationCap: number,
+  discountRate: number,
+  futureValuation: number
+) {
+  if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0 || investmentAmount <= 0) {
+    return {
+      safeEquity: 0,
+      founderEquity: 100, // Founders own everything if no investment
+      chartData: [
+        { name: "Founders", value: 100 },
+        { name: "SAFE Holder", value: 0 },
+      ],
+    };
+  }
+
+  const pricedRoundPricePerShare = futureValuation / PRE_ROUND_SHARES;
+  const discountedPrice = pricedRoundPricePerShare * (1 - discountRate / 100);
+  const capPrice = valuationCap > 0 ? valuationCap / PRE_ROUND_SHARES : Infinity;
+
+  const safeConversionPrice = Math.min(discountedPrice, capPrice);
+  
+  if (safeConversionPrice <= 0) {
+    return {
+      safeEquity: 0,
+      founderEquity: 100,
+      chartData: [
+        { name: "Founders", value: 100 },
+        { name: "SAFE Holder", value: 0 },
+      ],
+    };
+  }
+
+  const sharesToSafeHolder = investmentAmount / safeConversionPrice;
+  const totalPostSafeShares = PRE_ROUND_SHARES + sharesToSafeHolder;
+
+  const safeHolderOwnership = (sharesToSafeHolder / totalPostSafeShares) * 100;
+  const founderOwnership = (PRE_ROUND_SHARES / totalPostSafeShares) * 100;
+
+  return {
+    safeEquity: safeHolderOwnership,
+    founderEquity: founderOwnership,
+    chartData: [
+      { name: "Founders", value: founderOwnership },
+      { name: "SAFE Holder", value: safeHolderOwnership },
+    ],
+  };
+}
+
+
 export function SafeSimulator() {
   const [investmentAmount, setInvestmentAmount] = useState(100_000);
   const [valuationCap, setValuationCap] = useState(10_000_000);
   const [discountRate, setDiscountRate] = useState(20);
   const [futureValuation, setFutureValuation] = useState(20_000_000);
 
-  const [chartData, setChartData] = useState<{ name: string; value: number }[]>([]);
-  const [safeEquity, setSafeEquity] = useState(0);
-  const [founderEquity, setFounderEquity] = useState(0);
-
-  useEffect(() => {
-    if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0 || investmentAmount <= 0) {
-      setChartData([]);
-      setSafeEquity(0);
-      setFounderEquity(0);
-      return;
-    }
-
-    const pricedRoundPricePerShare = futureValuation / PRE_ROUND_SHARES;
-    const discountedPrice = pricedRoundPricePerShare * (1 - discountRate / 100);
-    const capPrice = valuationCap > 0 ? valuationCap / PRE_ROUND_SHARES : Infinity;
-
-    const safeConversionPrice = Math.min(discountedPrice, capPrice);
-    
-    if (safeConversionPrice <= 0) {
-        setChartData([]);
-        setSafeEquity(0);
-        setFounderEquity(0);
-        return;
-    }
-
-    const sharesToSafeHolder = investmentAmount / safeConversionPrice;
-    const totalPostSafeShares = PRE_ROUND_SHARES + sharesToSafeHolder;
-
-    const safeHolderOwnership = (sharesToSafeHolder / totalPostSafeShares) * 100;
-    const founderOwnership = (PRE_ROUND_SHARES / totalPostSafeShares) * 100;
-
-    setSafeEquity(safeHolderOwnership);
-    setFounderEquity(founderOwnership);
-
-    setChartData([
-      { name: "Founders", value: founderOwnership },
-      { name: "SAFE Holder", value: safeHolderOwnership },
-    ]);
-  }, [investmentAmount, valuationCap, discountRate, futureValuation]);
+  const { safeEquity, founderEquity, chartData } = useMemo(() => 
+    calculateEquity(investmentAmount, valuationCap, discountRate, futureValuation),
+    [investmentAmount, valuationCap, discountRate, futureValuation]
+  );
 
   const aiTerms = useMemo<ExplainSafeTermsInput | null>(() => {
     if (investmentAmount > 0 && valuationCap > 0 && discountRate >= 0) {
