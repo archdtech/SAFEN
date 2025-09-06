@@ -1,12 +1,12 @@
-import { Printer, Waves } from "lucide-react";
+import { Waves } from "lucide-react";
 import Link from "next/link";
-import { Button } from "./ui/button";
+import React from "react";
 
 interface HeaderProps {
-  handlePrint: () => void;
+  ActionButton?: React.ReactNode;
 }
 
-export function Header({ handlePrint }: HeaderProps) {
+export function Header({ ActionButton }: HeaderProps) {
   return (
     <header className="px-4 lg:px-6 h-16 flex items-center bg-background border-b sticky top-0 z-50">
       <Link href="/" className="flex items-center justify-center gap-2" prefetch={false}>
@@ -16,10 +16,7 @@ export function Header({ handlePrint }: HeaderProps) {
         </span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-         <Button onClick={() => handlePrint()} variant="outline">
-          <Printer className="mr-2" />
-          Export to PDF
-        </Button>
+         {ActionButton}
       </nav>
     </header>
   );
