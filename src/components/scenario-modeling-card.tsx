@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 
 interface ScenarioModelingCardProps {
     futureValuation: number;
@@ -32,14 +33,19 @@ export function ScenarioModelingCard({
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="space-y-2">
-                <Label htmlFor="futureValuation">Hypothetical Pre-Money Valuation ($)</Label>
-                 <Input
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="futureValuation">Hypothetical Pre-Money Valuation</Label>
+                   <span className="text-sm font-mono text-muted-foreground">
+                    ${(futureValuation / 1_000_000).toFixed(1)}M
+                  </span>
+                </div>
+                 <Slider
                     id="futureValuation"
-                    type="number"
-                    value={futureValuation}
-                    onChange={(e) => setFutureValuation(Number(e.target.value))}
-                    placeholder="e.g., 20000000"
-                    className="font-mono"
+                    min={1_000_000}
+                    max={100_000_000}
+                    step={1_000_000}
+                    value={[futureValuation]}
+                    onValueChange={(value) => setFutureValuation(value[0])}
                 />
             </div>
             {isProMode && (
