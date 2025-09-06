@@ -13,23 +13,23 @@ interface Scenario {
 
 const templates: Scenario[] = [
     {
-        name: "Seed Stage: The Accelerator",
-        description: "A typical scenario for a startup raising a small pre-seed round from an accelerator. A single SAFE with a low cap.",
+        name: "Early Stage: First Check",
+        description: "A typical scenario for a startup raising a small pre-seed round. A single SAFE with a low cap to get started.",
         safes: [{ id: 1, investmentAmount: 150000, valuationCap: 5000000, discountRate: 20 }],
         futureValuation: 10000000,
     },
     {
-        name: "Seed Stage: Angel Party Round",
-        description: "Modeling a party round with multiple angel investors, each contributing a small amount with similar terms.",
+        name: "Growth Stage: Party Round",
+        description: "Modeling a round with multiple angel investors, each contributing different amounts on similar terms.",
         safes: [
             { id: 1, investmentAmount: 50000, valuationCap: 8000000, discountRate: 20 },
             { id: 2, investmentAmount: 75000, valuationCap: 8000000, discountRate: 20 },
-            { id: 3, investmentAmount: 25000, valuationCap: 8000000, discountRate: 20 },
+            { id: 3, investmentAmount: 25000, valuationCap: 9000000, discountRate: 25 },
         ],
         futureValuation: 15000000,
     },
     {
-        name: "Bridge Round: High-Cap SAFE",
+        name: "Late Stage: Bridge Round",
         description: "A bridge round from existing investors to extend runway before a Series A. Higher valuation cap reflects progress.",
         safes: [{ id: 1, investmentAmount: 500000, valuationCap: 25000000, discountRate: 25 }],
         futureValuation: 50000000,
