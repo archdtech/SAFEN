@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { OwnershipChart } from "./ownership-chart";
 import { ExplanationCard } from "./explanation-card";
 import type { ExplainSafeTermsInput } from "@/ai/flows/explain-safe-terms";
@@ -10,7 +10,7 @@ import { ScenarioTemplates } from "./scenario-templates";
 import { KeyMetricsCard } from "./key-metrics-card";
 import type { Safe } from "@/types";
 import { Separator } from "@/components/ui/separator";
-
+import { Report } from "./report";
 
 const PRE_ROUND_SHARES = 10_000_000;
 
@@ -96,14 +96,25 @@ function calculateEquity(
   };
 }
 
+export interface SafeSimulatorClientRef {
+  // Define any methods you want to expose
+}
 
-export function SafeSimulatorClient() {
+interface SafeSimulatorClientProps {
+  reportRef: React.RefObject<HTMLDivElement>;
+}
+
+export const SafeSimulatorClient = forwardRef<SafeSimulatorClientRef, SafeSimulatorClientProps>(({ reportRef }, ref) => {
   const [safes, setSafes] = useState<Safe[]>([
     { id: 1, investmentAmount: 100000, valuationCap: 10000000, discountRate: 20 },
   ]);
   const [futureValuation, setFutureValuation] = useState(20_000_000);
   const [isProMode, setIsProMode] = useState(false);
   const [isPostMoney, setIsPostMoney] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    // Expose methods here
+  }));
 
   const { 
     founderEquity, 
@@ -150,72 +161,87 @@ export function SafeSimulatorClient() {
 
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-8">
-      <ScenarioTemplates loadScenario={loadScenario} />
-      
-      <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
-        <h2 className="text-xl font-semibold text-foreground">Step 1: Define SAFE Agreements</h2>
-        <p className="text-muted-foreground">
-          Start by entering the terms for one or more SAFE notes. You can add multiple SAFEs to see how they stack.
-        </p>
-      </div>
-      <SafeAgreementCard
-        safes={safes}
-        updateSafe={updateSafe}
-        addSafe={addSafe}
-        removeSafe={removeSafe}
-        isProMode={isProMode}
-        setIsProMode={setIsProMode}
-      />
-      
-      <Separator className="my-8" />
-
-      <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
-        <h2 className="text-xl font-semibold text-foreground">Step 2: Model a Future Financing Round</h2>
-        <p className="text-muted-foreground">
-          Use the slider to set a hypothetical valuation for your next financing round and see how it impacts dilution.
-        </p>
-      </div>
-      <ScenarioModelingCard
-          futureValuation={futureValuation}
-          setFutureValuation={setFutureValuation}
-          safeEquity={safeHolderEquity}
-          founderEquity={founderEquity}
+    <>
+      <div className="w-full max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-8">
+        <ScenarioTemplates loadScenario={loadScenario} />
+        
+        <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Step 1: Define SAFE Agreements</h2>
+          <p className="text-muted-foreground">
+            Start by entering the terms for one or more SAFE notes. You can add multiple SAFEs to see how they stack.
+          </p>
+        </div>
+        <SafeAgreementCard
+          safes={safes}
+          updateSafe={updateSafe}
+          addSafe={addSafe}
+          removeSafe={removeSafe}
           isProMode={isProMode}
-          isPostMoney={isPostMoney}
-          setIsPostMoney={setIsPostMoney}
-      />
+          setIsProMode={setIsProMode}
+        />
+        
+        <Separator className="my-8" />
 
-      <Separator className="my-8" />
-      
-      <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
-        <h2 className="text-xl font-semibold text-foreground">Step 3: Visualize & Understand</h2>
-        <p className="text-muted-foreground">
-          Review the projected ownership breakdown and use the AI assistant to get a plain-language explanation of the terms.
-        </p>
+        <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Step 2: Model a Future Financing Round</h2>
+          <p className="text-muted-foreground">
+            Use the slider to set a hypothetical valuation for your next financing round and see how it impacts dilution.
+          </p>
+        </div>
+        <ScenarioModelingCard
+            futureValuation={futureValuation}
+            setFutureValuation={setFutureValuation}
+            safeEquity={safeHolderEquity}
+            founderEquity={founderEquity}
+            isProMode={isProMode}
+            isPostMoney={isPostMoney}
+            setIsPostMoney={setIsPostMoney}
+        />
+
+        <Separator className="my-8" />
+        
+        <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Step 3: Visualize & Understand</h2>
+          <p className="text-muted-foreground">
+            Review the projected ownership breakdown and use the AI assistant to get a plain-language explanation of the terms.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-8">
+            <OwnershipChart data={chartData} />
+            <KeyMetricsCard 
+              totalSafeInvestment={totalSafeInvestment}
+              totalSharesToSafeHolders={totalSharesToSafeHolders}
+              effectiveSafePrice={effectiveSafePrice}
+            />
+        </div>
+
+        <Separator className="my-8" />
+        
+        <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Step 4: Get AI-Powered Insights</h2>
+          <p className="text-muted-foreground">
+            Use the AI assistant to get a plain-language explanation of the terms or ask your own questions.
+          </p>
+        </div>
+        <ExplanationCard terms={aiTerms} />
       </div>
-      <div className="grid md:grid-cols-2 gap-8">
-          <OwnershipChart data={chartData} />
-          <KeyMetricsCard 
+
+      {/* Hidden component for printing */}
+      <div className="hidden">
+        <div ref={reportRef}>
+          <Report 
+            safes={safes}
+            futureValuation={futureValuation}
+            isPostMoney={isPostMoney}
+            chartData={chartData}
             totalSafeInvestment={totalSafeInvestment}
             totalSharesToSafeHolders={totalSharesToSafeHolders}
             effectiveSafePrice={effectiveSafePrice}
           />
+        </div>
       </div>
-
-       <Separator className="my-8" />
-      
-      <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
-        <h2 className="text-xl font-semibold text-foreground">Step 4: Get AI-Powered Insights</h2>
-        <p className="text-muted-foreground">
-          Use the AI assistant to get a plain-language explanation of the terms or ask your own questions.
-        </p>
-      </div>
-      <ExplanationCard terms={aiTerms} />
-
-
-    </div>
+    </>
   );
-}
+});
 
-    
+SafeSimulatorClient.displayName = "SafeSimulatorClient";

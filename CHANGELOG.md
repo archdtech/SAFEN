@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Basic PDF Export**: Implemented functionality to export scenario models as a shareable PDF report, a feature of Milestone 2.
 - **Multiple SAFE Stacking**: Implemented simulation for multiple, stacked SAFE agreements, a feature of Milestone 2.
 - **Pre-money vs. Post-money SAFE Toggle**: Implemented a toggle in "Pro Mode" to switch between pre-money and post-money SAFE calculations, a feature of Milestone 2.
 - **Simple/Pro Mode Toggle**: Implemented a toggle switch in the SAFE simulator to switch between a simplified view and a professional view with more detailed inputs.
