@@ -16,7 +16,7 @@ export function Header({ handlePrint }: HeaderProps) {
         </span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-         <Button onClick={handlePrint} variant="outline">
+         <Button onClick={() => handlePrint()} variant="outline">
           <Printer className="mr-2" />
           Export to PDF
         </Button>
