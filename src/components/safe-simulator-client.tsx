@@ -50,7 +50,7 @@ function calculateEquity(
         ? safe.valuationCap / PRE_ROUND_SHARES
         : Infinity;
       
-      const safeConversionPrice = Math.min(discountedPrice, capPrice);
+      const safeConversionPrice = Math.min(discountPrice, capPrice);
       
       if (safeConversionPrice > 0) {
         totalSharesToSafeHolders += safe.investmentAmount / safeConversionPrice;
