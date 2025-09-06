@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,11 @@ export function SafeSimulator() {
   const [valuationCap, setValuationCap] = useState(10_000_000);
   const [discountRate, setDiscountRate] = useState(20);
   const [futureValuation, setFutureValuation] = useState(20_000_000);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const { safeEquity, founderEquity, chartData } = useMemo(() => 
     calculateEquity(investmentAmount, valuationCap, discountRate, futureValuation),
@@ -94,7 +99,7 @@ export function SafeSimulator() {
               <Input
                 id="investmentAmount"
                 type="number"
-                value={investmentAmount}
+                value={isClient ? investmentAmount.toString() : ""}
                 onChange={(e) => setInvestmentAmount(Number(e.target.value))}
                 placeholder="e.g., 100000"
                 className="font-mono"
@@ -105,7 +110,7 @@ export function SafeSimulator() {
               <Input
                 id="valuationCap"
                 type="number"
-                value={valuationCap}
+                value={isClient ? valuationCap.toString() : ""}
                 onChange={(e) => setValuationCap(Number(e.target.value))}
                 placeholder="e.g., 10000000"
                 className="font-mono"
@@ -139,7 +144,7 @@ export function SafeSimulator() {
                      <Input
                         id="futureValuation"
                         type="number"
-                        value={futureValuation}
+                        value={isClient ? futureValuation.toString() : ""}
                         onChange={(e) => setFutureValuation(Number(e.target.value))}
                         placeholder="e.g., 20000000"
                         className="font-mono"
