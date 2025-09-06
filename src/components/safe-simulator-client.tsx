@@ -13,37 +13,43 @@ function calculateEquity(
   investmentAmount: number,
   valuationCap: number,
   discountRate: number,
-  futureValuation: number
+  futureValuation: number,
+  isPostMoney: boolean
 ) {
   if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0 || investmentAmount <= 0) {
     return {
       safeEquity: 0,
       founderEquity: 100,
+      newMoneyEquity: 0,
       chartData: [
         { name: "Founders", value: 100 },
         { name: "SAFE Holder", value: 0 },
+        { name: "New Investors", value: 0 },
       ],
     };
   }
 
-  const pricedRoundPricePerShare = futureValuation / PRE_ROUND_SHARES;
+  // This represents the valuation of the company *before* the new financing round investors put their money in.
+  const preMoneyValuation = futureValuation;
+
+  const pricedRoundPricePerShare = preMoneyValuation / PRE_ROUND_SHARES;
   
-  // In simple mode, discount rate is 0, so discountedPrice is same as pricedRoundPricePerShare.
   const discountedPrice = pricedRoundPricePerShare * (1 - discountRate / 100);
 
   // If valuation cap is 0 or less, it's not applicable. Use Infinity to ensure discounted price is chosen.
-  const capPrice = valuationCap > 0 ? valuationCap / PRE_ROUND_SHARES : Infinity;
+  const capPrice = valuationCap > 0 ? valuationCap / (isPostMoney ? PRE_ROUND_SHARES + (investmentAmount / (valuationCap / PRE_ROUND_SHARES)) : PRE_ROUND_SHARES) : Infinity;
   
-  // The conversion price is the *lower* of the two prices.
   const safeConversionPrice = Math.min(discountedPrice, capPrice);
   
   if (safeConversionPrice <= 0) {
     return {
       safeEquity: 0,
       founderEquity: 100,
+      newMoneyEquity: 0,
       chartData: [
         { name: "Founders", value: 100 },
         { name: "SAFE Holder", value: 0 },
+        { name: "New Investors", value: 0 },
       ],
     };
   }
@@ -70,10 +76,11 @@ export function SafeSimulatorClient() {
   const [discountRate, setDiscountRate] = useState(20);
   const [futureValuation, setFutureValuation] = useState(20_000_000);
   const [isProMode, setIsProMode] = useState(false);
+  const [isPostMoney, setIsPostMoney] = useState(true);
 
   const { safeEquity, founderEquity, chartData } = useMemo(() => 
-    calculateEquity(investmentAmount, valuationCap, isProMode ? discountRate : 0, futureValuation),
-    [investmentAmount, valuationCap, discountRate, futureValuation, isProMode]
+    calculateEquity(investmentAmount, valuationCap, isProMode ? discountRate : 0, futureValuation, isPostMoney),
+    [investmentAmount, valuationCap, discountRate, futureValuation, isProMode, isPostMoney]
   );
 
   const aiTerms = useMemo<Omit<ExplainSafeTermsInput, 'customPrompt'> | null>(() => {
@@ -91,7 +98,7 @@ export function SafeSimulatorClient() {
           setInvestmentAmount={setInvestmentAmount}
           valuationCap={valuationCap}
           setValuationCap={setValuationCap}
-          discountRate={discountRate}
+          discountRate={discountrate}
           setDiscountRate={setDiscountRate}
           isProMode={isProMode}
           setIsProMode={setIsProMode}
@@ -103,6 +110,8 @@ export function SafeSimulatorClient() {
             safeEquity={safeEquity}
             founderEquity={founderEquity}
             isProMode={isProMode}
+            isPostMoney={isPostMoney}
+            setIsPostMoney={setIsPostMoney}
         />
 
       </div>

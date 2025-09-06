@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 
 interface ScenarioModelingCardProps {
     futureValuation: number;
@@ -10,6 +11,8 @@ interface ScenarioModelingCardProps {
     safeEquity: number;
     founderEquity: number;
     isProMode: boolean;
+    isPostMoney: boolean;
+    setIsPostMoney: (value: boolean) => void;
 }
 
 export function ScenarioModelingCard({
@@ -17,7 +20,9 @@ export function ScenarioModelingCard({
     setFutureValuation,
     safeEquity,
     founderEquity,
-    isProMode
+    isProMode,
+    isPostMoney,
+    setIsPostMoney,
 }: ScenarioModelingCardProps) {
   return (
     <Card className="bg-muted/50">
@@ -27,7 +32,7 @@ export function ScenarioModelingCard({
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="space-y-2">
-                <Label htmlFor="futureValuation">Hypothetical Post-Money Valuation ($)</Label>
+                <Label htmlFor="futureValuation">Hypothetical Pre-Money Valuation ($)</Label>
                  <Input
                     id="futureValuation"
                     type="number"
@@ -37,6 +42,17 @@ export function ScenarioModelingCard({
                     className="font-mono"
                 />
             </div>
+            {isProMode && (
+              <div className="flex items-center justify-between space-x-2 pt-2">
+                  <Label htmlFor="post-money-mode" className="flex flex-col space-y-1">
+                      <span>Post-Money SAFE</span>
+                      <span className="font-normal leading-snug text-muted-foreground text-xs">
+                        Calculate ownership based on the YC post-money SAFE method.
+                      </span>
+                  </Label>
+                  <Switch id="post-money-mode" checked={isPostMoney} onCheckedChange={setIsPostMoney} />
+              </div>
+            )}
             <div className="space-y-3 pt-2">
                 <div className="flex justify-between text-sm font-medium">
                     <span>SAFE Holder's Equity:</span>
