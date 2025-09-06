@@ -98,7 +98,7 @@ export function SafeSimulatorClient() {
           setInvestmentAmount={setInvestmentAmount}
           valuationCap={valuationCap}
           setValuationCap={setValuationCap}
-          discountRate={discountrate}
+          discountRate={discountRate}
           setDiscountRate={setDiscountRate}
           isProMode={isProMode}
           setIsProMode={setIsProMode}
