@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { explainSafeTerms, type ExplainSafeTermsInput } from "@/ai/flows/explain-safe-terms";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ExplanationCardProps {
   terms: ExplainSafeTermsInput | null;
@@ -13,15 +15,19 @@ interface ExplanationCardProps {
 
 export function ExplanationCard({ terms }: ExplanationCardProps) {
   const [explanation, setExplanation] = useState("");
+  const [customPrompt, setCustomPrompt] = useState("");
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
-  useEffect(() => {
+  const handleGenerateExplanation = () => {
     if (terms && terms.investmentAmount > 0 && terms.valuationCap > 0) {
       startTransition(async () => {
         try {
-          // Ensure discount rate is not negative, which can happen if pro mode is off
-          const validTerms = { ...terms, discountRate: Math.max(0, terms.discountRate) };
+          const validTerms = { 
+            ...terms, 
+            discountRate: Math.max(0, terms.discountRate),
+            customPrompt: customPrompt || undefined,
+          };
           const result = await explainSafeTerms(validTerms);
           setExplanation(result.explanation);
         } catch (error) {
@@ -35,9 +41,14 @@ export function ExplanationCard({ terms }: ExplanationCardProps) {
         }
       });
     } else {
-      setExplanation("");
+       toast({
+        variant: "default",
+        title: "Missing Terms",
+        description: "Please set the SAFE Investment Amount and Valuation Cap first.",
+      });
     }
-  }, [terms, toast]);
+  };
+
 
   return (
     <Card>
@@ -48,21 +59,35 @@ export function ExplanationCard({ terms }: ExplanationCardProps) {
         </CardTitle>
         <CardDescription>An AI-powered summary of what these terms mean for you.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 min-h-[120px]">
-        {isPending && (
-          <div className="space-y-2 pt-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-4/5" />
-          </div>
-        )}
-        {explanation ? (
-          <p className="text-sm text-foreground leading-relaxed">{explanation}</p>
-        ) : !isPending && (
-          <p className="text-sm text-muted-foreground pt-2">
-            Adjust the SAFE terms to generate an explanation.
-          </p>
-        )}
+      <CardContent className="space-y-4">
+        <div>
+          <Textarea
+            placeholder="Optional: Ask a specific question, e.g., 'Explain this to me like I'm a first-time founder.'"
+            value={customPrompt}
+            onChange={(e) => setCustomPrompt(e.target.value)}
+            className="mb-2"
+          />
+          <Button onClick={handleGenerateExplanation} disabled={isPending}>
+            {isPending ? "Generating..." : "Generate Explanation"}
+          </Button>
+        </div>
+
+        <div className="min-h-[120px] rounded-md border border-dashed bg-muted/50 p-4">
+          {isPending && (
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          )}
+          {explanation ? (
+            <p className="text-sm text-foreground leading-relaxed">{explanation}</p>
+          ) : !isPending && (
+            <p className="text-sm text-muted-foreground text-center pt-8">
+              Click "Generate Explanation" to get started.
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

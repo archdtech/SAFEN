@@ -27,9 +27,14 @@ function calculateEquity(
   }
 
   const pricedRoundPricePerShare = futureValuation / PRE_ROUND_SHARES;
+  
+  // In simple mode, discount rate is 0, so discountedPrice is same as pricedRoundPricePerShare.
   const discountedPrice = pricedRoundPricePerShare * (1 - discountRate / 100);
-  const capPrice = valuationCap > 0 ? valuationCap / PRE_ROUND_SHARES : Infinity;
 
+  // If valuation cap is 0 or less, it's not applicable. Use Infinity to ensure discounted price is chosen.
+  const capPrice = valuationCap > 0 ? valuationCap / PRE_ROUND_SHARES : Infinity;
+  
+  // The conversion price is the *lower* of the two prices.
   const safeConversionPrice = Math.min(discountedPrice, capPrice);
   
   if (safeConversionPrice <= 0) {
@@ -71,8 +76,8 @@ export function SafeSimulatorClient() {
     [investmentAmount, valuationCap, discountRate, futureValuation, isProMode]
   );
 
-  const aiTerms = useMemo<ExplainSafeTermsInput | null>(() => {
-    if (investmentAmount > 0 && valuationCap > 0 && discountRate >= 0) {
+  const aiTerms = useMemo<Omit<ExplainSafeTermsInput, 'customPrompt'> | null>(() => {
+    if (investmentAmount > 0 && valuationCap > 0) {
       return { investmentAmount, valuationCap, discountRate: isProMode ? discountRate : 0 };
     }
     return null;

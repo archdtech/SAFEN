@@ -25,6 +25,7 @@ const ExplainSafeTermsInputSchema = z.object({
     .describe(
       'The discount rate of the SAFE agreement, representing the percentage discount applied to the price per share at which the SAFE converts into equity.'
     ),
+  customPrompt: z.string().optional().describe('A custom user prompt to tailor the explanation.'),
 });
 export type ExplainSafeTermsInput = z.infer<typeof ExplainSafeTermsInputSchema>;
 
@@ -47,13 +48,21 @@ const prompt = ai.definePrompt({
   name: 'explainSafeTermsPrompt',
   input: {schema: ExplainSafeTermsInputSchema},
   output: {schema: ExplainSafeTermsOutputSchema},
-  prompt: `You are an AI assistant specialized in explaining complex financial terms in plain language.
+  prompt: `You are an AI assistant specialized in explaining complex financial terms in plain language for startup founders.
 
-  Based on the following SAFE agreement terms, provide a clear and concise explanation of the terms and their potential implications for a founder without a financial background:
+  Based on the following SAFE agreement terms, provide a clear and concise explanation of the terms and their potential implications for a founder without a financial background.
 
-  Investment Amount: {{investmentAmount}}
-  Valuation Cap: {{valuationCap}}
-  Discount Rate: {{discountRate}}
+  SAFE Terms:
+  - Investment Amount: \${{investmentAmount}}
+  - Valuation Cap: \${{valuationCap}}
+  - Discount Rate: {{discountRate}}%
+
+  {{#if customPrompt}}
+  The user has a specific question: "{{customPrompt}}"
+  Please address this question directly in your explanation, keeping the tone helpful and easy to understand.
+  {{else}}
+  Provide a general explanation covering what each term means and how they work together.
+  {{/if}}
   `,
 });
 
@@ -68,4 +77,3 @@ const explainSafeTermsFlow = ai.defineFlow(
     return output!;
   }
 );
-
