@@ -7,13 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Trash2, PlusCircle } from "lucide-react";
-
-interface Safe {
-  id: number;
-  investmentAmount: number;
-  valuationCap: number;
-  discountRate: number;
-}
+import type { Safe } from "@/types";
 
 interface SafeAgreementCardProps {
     safes: Safe[];

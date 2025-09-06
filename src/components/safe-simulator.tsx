@@ -10,5 +10,14 @@ export function SafeSimulator() {
     setIsClient(true);
   }, []);
 
-  return isClient ? <SafeSimulatorClient /> : null;
+  if (!isClient) {
+    // Render a placeholder or loader on the server
+    return (
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 md:py-12 text-center">
+            Loading Simulator...
+        </div>
+    );
+  }
+
+  return <SafeSimulatorClient />;
 }

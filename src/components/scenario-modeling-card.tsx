@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 
@@ -34,7 +33,7 @@ export function ScenarioModelingCard({
         <CardContent className="space-y-6">
             <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="futureValuation">Hypothetical Pre-Money Valuation</Label>
+                  <Label htmlFor="futureValuation">Hypothetical Post-Money Valuation</Label>
                    <span className="text-sm font-mono text-muted-foreground">
                     ${(futureValuation / 1_000_000).toFixed(1)}M
                   </span>
