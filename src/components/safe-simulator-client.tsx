@@ -7,6 +7,7 @@ import type { ExplainSafeTermsInput } from "@/ai/flows/explain-safe-terms";
 import { SafeAgreementCard } from "./safe-agreement-card";
 import { ScenarioModelingCard } from "./scenario-modeling-card";
 import { ScenarioTemplates } from "./scenario-templates";
+import { KeyMetricsCard } from "./key-metrics-card";
 import type { Safe } from "@/types";
 import { Separator } from "@/components/ui/separator";
 
@@ -21,28 +22,32 @@ function calculateEquity(
 ) {
   if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0) {
     return {
-      safeEquity: 0,
       founderEquity: 100,
+      safeHolderEquity: 0,
       chartData: [{ name: "Founders", value: 100 }],
+      totalSafeInvestment: 0,
+      totalSharesToSafeHolders: 0,
+      effectiveSafePrice: 0,
     };
   }
 
-  // Calculate total SAFE investment
   const totalSafeInvestment = safes.reduce((acc, s) => acc + s.investmentAmount, 0);
-
-  // Determine the company valuation for conversion
   const conversionValuation = isPostMoney ? futureValuation - totalSafeInvestment : futureValuation;
 
   if (conversionValuation <= 0) {
      return {
-      safeEquity: 0,
       founderEquity: 100,
+      safeHolderEquity: 0,
       chartData: [{ name: "Founders", value: 100 }],
+      totalSafeInvestment,
+      totalSharesToSafeHolders: 0,
+      effectiveSafePrice: 0,
     };
   }
 
   const pricedRoundPricePerShare = conversionValuation / PRE_ROUND_SHARES;
   let totalSharesToSafeHolders = 0;
+  let weightedAverageSafePrice = 0;
 
   safes.forEach(safe => {
     if (safe.investmentAmount > 0) {
@@ -51,34 +56,43 @@ function calculateEquity(
         ? safe.valuationCap / PRE_ROUND_SHARES
         : Infinity;
       
-      const safeConversionPrice = Math.min(discountPrice, capPrice);
+      const safeConversionPrice = Math.min(pricedRoundPricePerShare, discountPrice, capPrice);
       
       if (safeConversionPrice > 0) {
-        totalSharesToSafeHolders += safe.investmentAmount / safeConversionPrice;
+        const sharesForThisSafe = safe.investmentAmount / safeConversionPrice;
+        totalSharesToSafeHolders += sharesForThisSafe;
+        weightedAverageSafePrice += sharesForThisSafe * safeConversionPrice;
       }
     }
   });
   
   if (totalSharesToSafeHolders <= 0) {
      return {
-      safeEquity: 0,
       founderEquity: 100,
+      safeHolderEquity: 0,
       chartData: [{ name: "Founders", value: 100 }],
+      totalSafeInvestment,
+      totalSharesToSafeHolders: 0,
+      effectiveSafePrice: 0,
     };
   }
-  
+
+  const effectiveSafePrice = weightedAverageSafePrice / totalSharesToSafeHolders;
   const totalPostSafeShares = PRE_ROUND_SHARES + totalSharesToSafeHolders;
 
   const safeHolderOwnership = (totalSharesToSafeHolders / totalPostSafeShares) * 100;
   const founderOwnership = (PRE_ROUND_SHARES / totalPostSafeShares) * 100;
 
   return {
-    safeEquity: safeHolderOwnership,
     founderEquity: founderOwnership,
+    safeHolderEquity: safeHolderOwnership,
     chartData: [
       { name: "Founders", value: founderOwnership },
       { name: "SAFE Holders", value: safeHolderOwnership },
     ],
+    totalSafeInvestment,
+    totalSharesToSafeHolders,
+    effectiveSafePrice,
   };
 }
 
@@ -91,7 +105,14 @@ export function SafeSimulatorClient() {
   const [isProMode, setIsProMode] = useState(false);
   const [isPostMoney, setIsPostMoney] = useState(false);
 
-  const { safeEquity, founderEquity, chartData } = useMemo(() => 
+  const { 
+    founderEquity, 
+    safeHolderEquity, 
+    chartData, 
+    totalSafeInvestment,
+    totalSharesToSafeHolders,
+    effectiveSafePrice 
+  } = useMemo(() => 
     calculateEquity(safes, futureValuation, isPostMoney, isProMode),
     [safes, futureValuation, isPostMoney, isProMode]
   );
@@ -158,7 +179,7 @@ export function SafeSimulatorClient() {
       <ScenarioModelingCard
           futureValuation={futureValuation}
           setFutureValuation={setFutureValuation}
-          safeEquity={safeEquity}
+          safeEquity={safeHolderEquity}
           founderEquity={founderEquity}
           isProMode={isProMode}
           isPostMoney={isPostMoney}
@@ -175,9 +196,26 @@ export function SafeSimulatorClient() {
       </div>
       <div className="grid md:grid-cols-2 gap-8">
           <OwnershipChart data={chartData} />
-          <ExplanationCard terms={aiTerms} />
+          <KeyMetricsCard 
+            totalSafeInvestment={totalSafeInvestment}
+            totalSharesToSafeHolders={totalSharesToSafeHolders}
+            effectiveSafePrice={effectiveSafePrice}
+          />
       </div>
+
+       <Separator className="my-8" />
+      
+      <div className="space-y-4 p-6 border rounded-lg bg-card shadow-sm">
+        <h2 className="text-xl font-semibold text-foreground">Step 4: Get AI-Powered Insights</h2>
+        <p className="text-muted-foreground">
+          Use the AI assistant to get a plain-language explanation of the terms or ask your own questions.
+        </p>
+      </div>
+      <ExplanationCard terms={aiTerms} />
+
 
     </div>
   );
 }
+
+    

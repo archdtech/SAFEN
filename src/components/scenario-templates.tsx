@@ -13,14 +13,14 @@ interface Scenario {
 
 const templates: Scenario[] = [
     {
-        name: "Early Stage: First Check",
-        description: "A typical scenario for a startup raising a small pre-seed round. A single SAFE with a low cap to get started.",
+        name: "Standard Pre-Seed",
+        description: "A common starting point: a single SAFE on a standard valuation cap with a discount.",
         safes: [{ id: 1, investmentAmount: 150000, valuationCap: 5000000, discountRate: 20 }],
         futureValuation: 10000000,
     },
     {
-        name: "Growth Stage: Party Round",
-        description: "Modeling a round with multiple angel investors, each contributing different amounts on similar terms.",
+        name: "Competitive Party Round",
+        description: "Multiple investors are coming in on slightly different terms, common in a 'hot' round.",
         safes: [
             { id: 1, investmentAmount: 50000, valuationCap: 8000000, discountRate: 20 },
             { id: 2, investmentAmount: 75000, valuationCap: 8000000, discountRate: 20 },
@@ -29,8 +29,8 @@ const templates: Scenario[] = [
         futureValuation: 15000000,
     },
     {
-        name: "Late Stage: Bridge Round",
-        description: "A bridge round from existing investors to extend runway before a Series A. Higher valuation cap reflects progress.",
+        name: "High-Resolution Bridge",
+        description: "A bridge round to extend runway, with terms that reflect significant progress since the last raise.",
         safes: [{ id: 1, investmentAmount: 500000, valuationCap: 25000000, discountRate: 25 }],
         futureValuation: 50000000,
     },
@@ -63,3 +63,5 @@ export function ScenarioTemplates({ loadScenario }: ScenarioTemplatesProps) {
         </Card>
     )
 }
+
+    

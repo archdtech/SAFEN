@@ -91,10 +91,14 @@ export function SafeAgreementCard({
             )}
           </div>
         ))}
-        <Button variant="outline" onClick={addSafe} className="w-full">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Another SAFE
-        </Button>
+         {safes.length < 5 && (
+            <Button variant="outline" onClick={addSafe} className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Another SAFE
+            </Button>
+        )}
       </CardContent>
     </Card>
   );
 }
+
+    
