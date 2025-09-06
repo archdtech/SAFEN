@@ -17,10 +17,12 @@ export function ExplanationCard({ terms }: ExplanationCardProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (terms && terms.investmentAmount > 0 && terms.valuationCap > 0 && terms.discountRate > 0) {
+    if (terms && terms.investmentAmount > 0 && terms.valuationCap > 0) {
       startTransition(async () => {
         try {
-          const result = await explainSafeTerms(terms);
+          // Ensure discount rate is not negative, which can happen if pro mode is off
+          const validTerms = { ...terms, discountRate: Math.max(0, terms.discountRate) };
+          const result = await explainSafeTerms(validTerms);
           setExplanation(result.explanation);
         } catch (error) {
           console.error("Failed to get explanation:", error);
