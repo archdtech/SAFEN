@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { OwnershipChart } from "./ownership-chart";
 import { ExplanationCard } from "./explanation-card";
 import type { ExplainSafeTermsInput } from "@/ai/flows/explain-safe-terms";
@@ -9,55 +9,56 @@ import { ScenarioModelingCard } from "./scenario-modeling-card";
 
 const PRE_ROUND_SHARES = 10_000_000;
 
+interface Safe {
+  id: number;
+  investmentAmount: number;
+  valuationCap: number;
+  discountRate: number;
+}
+
 function calculateEquity(
-  investmentAmount: number,
-  valuationCap: number,
-  discountRate: number,
+  safes: Safe[],
   futureValuation: number,
-  isPostMoney: boolean
+  isPostMoney: boolean,
+  isProMode: boolean,
 ) {
-  if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0 || investmentAmount <= 0) {
+  if (futureValuation <= 0 || PRE_ROUND_SHARES <= 0 || safes.length === 0) {
     return {
       safeEquity: 0,
       founderEquity: 100,
-      newMoneyEquity: 0,
-      chartData: [
-        { name: "Founders", value: 100 },
-        { name: "SAFE Holder", value: 0 },
-        { name: "New Investors", value: 0 },
-      ],
+      chartData: [{ name: "Founders", value: 100 }],
     };
   }
-
-  // This represents the valuation of the company *before* the new financing round investors put their money in.
-  const preMoneyValuation = futureValuation;
-
-  const pricedRoundPricePerShare = preMoneyValuation / PRE_ROUND_SHARES;
   
-  const discountedPrice = pricedRoundPricePerShare * (1 - discountRate / 100);
+  const pricedRoundPricePerShare = futureValuation / PRE_ROUND_SHARES;
+  let totalSharesToSafeHolders = 0;
 
-  // If valuation cap is 0 or less, it's not applicable. Use Infinity to ensure discounted price is chosen.
-  const capPrice = valuationCap > 0 ? valuationCap / (isPostMoney ? PRE_ROUND_SHARES + (investmentAmount / (valuationCap / PRE_ROUND_SHARES)) : PRE_ROUND_SHARES) : Infinity;
-  
-  const safeConversionPrice = Math.min(discountedPrice, capPrice);
-  
-  if (safeConversionPrice <= 0) {
-    return {
+  safes.forEach(safe => {
+    if (safe.investmentAmount > 0) {
+      const discountedPrice = pricedRoundPricePerShare * (1 - (isProMode ? safe.discountRate : 0) / 100);
+      const capPrice = safe.valuationCap > 0 
+        ? safe.valuationCap / (isPostMoney ? PRE_ROUND_SHARES + (safes.reduce((acc, s) => acc + s.investmentAmount, 0) / (safe.valuationCap / PRE_ROUND_SHARES)) : PRE_ROUND_SHARES) 
+        : Infinity;
+      
+      const safeConversionPrice = Math.min(discountedPrice, capPrice);
+      
+      if (safeConversionPrice > 0) {
+        totalSharesToSafeHolders += safe.investmentAmount / safeConversionPrice;
+      }
+    }
+  });
+
+  if (totalSharesToSafeHolders <= 0) {
+     return {
       safeEquity: 0,
       founderEquity: 100,
-      newMoneyEquity: 0,
-      chartData: [
-        { name: "Founders", value: 100 },
-        { name: "SAFE Holder", value: 0 },
-        { name: "New Investors", value: 0 },
-      ],
+      chartData: [{ name: "Founders", value: 100 }],
     };
   }
 
-  const sharesToSafeHolder = investmentAmount / safeConversionPrice;
-  const totalPostSafeShares = PRE_ROUND_SHARES + sharesToSafeHolder;
+  const totalPostSafeShares = PRE_ROUND_SHARES + totalSharesToSafeHolders;
 
-  const safeHolderOwnership = (sharesToSafeHolder / totalPostSafeShares) * 100;
+  const safeHolderOwnership = (totalSharesToSafeHolders / totalPostSafeShares) * 100;
   const founderOwnership = (PRE_ROUND_SHARES / totalPostSafeShares) * 100;
 
   return {
@@ -65,41 +66,60 @@ function calculateEquity(
     founderEquity: founderOwnership,
     chartData: [
       { name: "Founders", value: founderOwnership },
-      { name: "SAFE Holder", value: safeHolderOwnership },
+      { name: "SAFE Holders", value: safeHolderOwnership },
     ],
   };
 }
 
+
 export function SafeSimulatorClient() {
-  const [investmentAmount, setInvestmentAmount] = useState(100_000);
-  const [valuationCap, setValuationCap] = useState(10_000_000);
-  const [discountRate, setDiscountRate] = useState(20);
+  const [safes, setSafes] = useState<Safe[]>([
+    { id: 1, investmentAmount: 100000, valuationCap: 10000000, discountRate: 20 },
+  ]);
   const [futureValuation, setFutureValuation] = useState(20_000_000);
   const [isProMode, setIsProMode] = useState(false);
   const [isPostMoney, setIsPostMoney] = useState(true);
 
   const { safeEquity, founderEquity, chartData } = useMemo(() => 
-    calculateEquity(investmentAmount, valuationCap, isProMode ? discountRate : 0, futureValuation, isPostMoney),
-    [investmentAmount, valuationCap, discountRate, futureValuation, isProMode, isPostMoney]
+    calculateEquity(safes, futureValuation, isPostMoney, isProMode),
+    [safes, futureValuation, isPostMoney, isProMode]
   );
-
+  
   const aiTerms = useMemo<Omit<ExplainSafeTermsInput, 'customPrompt'> | null>(() => {
-    if (investmentAmount > 0 && valuationCap > 0) {
-      return { investmentAmount, valuationCap, discountRate: isProMode ? discountRate : 0 };
+    const totalInvestment = safes.reduce((acc, s) => acc + s.investmentAmount, 0);
+    const firstSafe = safes[0];
+    if (totalInvestment > 0 && firstSafe && firstSafe.valuationCap > 0) {
+      // For simplicity, we send the first SAFE's data to the AI. This could be aggregated later.
+      return { 
+        investmentAmount: totalInvestment, 
+        valuationCap: firstSafe.valuationCap, 
+        discountRate: isProMode ? firstSafe.discountRate : 0 
+      };
     }
     return null;
-  }, [investmentAmount, valuationCap, discountRate, isProMode]);
+  }, [safes, isProMode]);
+
+  const addSafe = () => {
+    setSafes([...safes, { id: Date.now(), investmentAmount: 50000, valuationCap: 12000000, discountRate: 15 }]);
+  };
+
+  const removeSafe = (id: number) => {
+    setSafes(safes.filter(safe => safe.id !== id));
+  };
+
+  const updateSafe = (id: number, field: keyof Safe, value: number) => {
+    setSafes(safes.map(safe => safe.id === id ? { ...safe, [field]: value } : safe));
+  };
+
 
   return (
     <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 w-full max-w-7xl mx-auto px-4 py-8 md:py-12">
       <div className="flex flex-col gap-6 lg:gap-8">
         <SafeAgreementCard
-          investmentAmount={investmentAmount}
-          setInvestmentAmount={setInvestmentAmount}
-          valuationCap={valuationCap}
-          setValuationCap={setValuationCap}
-          discountRate={discountRate}
-          setDiscountRate={setDiscountRate}
+          safes={safes}
+          updateSafe={updateSafe}
+          addSafe={addSafe}
+          removeSafe={removeSafe}
           isProMode={isProMode}
           setIsProMode={setIsProMode}
         />
