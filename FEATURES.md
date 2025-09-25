@@ -2,21 +2,21 @@
 
 This document outlines the features to be implemented in each milestone of the SAFE Navigator application's development.
 
-## Milestone 1: Foundation
+## Milestone 1: Foundation (Complete)
 
-- **Single SAFE Input**: Simplified controls like sliders and toggles for entering SAFE terms.
-- **Basic Conversion Calculator**: Core logic for calculating SAFE conversion.
-- **Simple/Pro Mode Toggle**: Ability to switch between a simplified and a more detailed view.
-- **Ownership Pie Chart Visualization**: Visual representation of ownership distribution post-conversion.
-- **Plain Language Explanation Engine**: AI-powered explanations of financial terms.
+- ✅ **Single SAFE Input**: Simplified controls like sliders and toggles for entering SAFE terms.
+- ✅ **Basic Conversion Calculator**: Core logic for calculating SAFE conversion.
+- ✅ **Simple/Pro Mode Toggle**: Ability to switch between a simplified and a more detailed view.
+- ✅ **Ownership Pie Chart Visualization**: Visual representation of ownership distribution post-conversion.
+- ✅ **Plain Language Explanation Engine**: AI-powered explanations of financial terms.
 
-## Milestone 2: Multi-Scenario Analysis
+## Milestone 2: Multi-Scenario Analysis (Complete)
 
-- **Multiple SAFE Stacking Simulation**: Model the impact of multiple SAFEs.
-- **Scenario Comparison**: Compare outcomes of different terms (e.g., cap vs. discount).
-- **Pre-money vs. Post-money SAFE Modeling**: Support for both types of SAFEs.
-- **Basic PDF Export**: Generate simple, shareable PDF reports of scenarios.
-- **"What-if" Playground Mode**: A sandbox to freely experiment with different term combinations.
+- ✅ **Multiple SAFE Stacking Simulation**: Model the impact of multiple SAFEs.
+- ✅ **Scenario Comparison**: Compare outcomes of different terms (e.g., cap vs. discount) using templates.
+- ✅ **Pre-money vs. Post-money SAFE Modeling**: Support for both types of SAFEs.
+- ✅ **Basic PDF Export**: Generate simple, shareable PDF reports of scenarios.
+- ✅ **"What-if" Playground Mode**: A sandbox to freely experiment with different term combinations via interactive sliders and templates.
 
 ## Milestone 3: Advanced Modeling
 
